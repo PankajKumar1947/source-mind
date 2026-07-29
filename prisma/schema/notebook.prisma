@@ -1,0 +1,67 @@
+model Notebook {
+  notebookId String   @id @default(uuid())
+  title      String
+  sources    Source[]
+  chats      Chat[]
+  userId     String
+  user       User     @relation(fields: [userId], references: [userId])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@map("notebook")
+}
+
+model Source {
+  sourceId       String       @id @default(uuid())
+  sourceType     SourceType
+  title          String?
+  storageKey     String?
+  url            String?
+  embeddingModel String
+  status         SourceStatus
+  notebookId     String
+  notebook       Notebook     @relation(fields: [notebookId], references: [notebookId])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  chunks         Chunk[]
+
+  @@index([notebookId])
+  @@map("source")
+}
+
+model Chunk {
+  chunkId String @id @default(uuid())
+
+  sourceId String
+  source   Source @relation(fields: [sourceId], references: [sourceId], onDelete: Cascade)
+
+  content String
+
+  chunkIndex Int
+  pageNumber Int?
+
+  citations Citation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sourceId])
+  @@index([sourceId, chunkIndex])
+  @@map("chunk")
+}
+
+enum SourceType {
+  PDF
+  TEXT
+  WEB_LINK
+  YT_VIDEO
+  VTT
+}
+
+enum SourceStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  PROCESSING
+}
