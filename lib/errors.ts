@@ -6,3 +6,9 @@ export class ApiError extends Error {
     super(message);
   }
 }
+
+export class ActionError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}

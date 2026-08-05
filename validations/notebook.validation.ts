@@ -6,5 +6,5 @@ export const createNotebookSchema = z.object({
 
 export const updateNotebookSchema = createNotebookSchema.partial();
 
-export type CreateNotebookSchema = z.infer<typeof createNotebookSchema>;
-export type UpdateNotebookSchema = z.infer<typeof updateNotebookSchema>;
+export type CreateNotebookInput = z.infer<typeof createNotebookSchema>;
+export type UpdateNotebookInput = z.infer<typeof updateNotebookSchema>;
