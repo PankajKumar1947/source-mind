@@ -29,7 +29,7 @@ export default function Home() {
             </p>
           )}
         </div>
-        
+
         {state.message && !state.success && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {state.message}
