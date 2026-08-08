@@ -1,8 +1,8 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
-import { useParams, usePathname } from "next/navigation"
-import { getNotebookById } from "@/services/notebook.service"
+import { useParams } from "next/navigation"
+import { getNotebookBySlug } from "@/services/notebook.service"
 import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
 
 export interface Source {
@@ -38,16 +38,15 @@ const NotebookContext = createContext<NotebookContextType | undefined>(undefined
 
 export function NotebookProvider({ children }: { children: React.ReactNode }) {
   const params = useParams()
-  const pathname = usePathname()
-  const activeNotebookId = params.notebookId as string
+  const activeNotebookSlug = params.notebookSlug as string
 
   const [activeNotebook, setActiveNotebook] = useState<Notebook | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const fetchNotebook = useCallback(async (id: string) => {
+  const fetchNotebook = useCallback(async (slug: string) => {
     setIsLoading(true)
     try {
-      const data = await getNotebookById(id)
+      const data = await getNotebookBySlug(slug)
       if (data) {
         setActiveNotebook(data)
       } else {
@@ -62,18 +61,18 @@ export function NotebookProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (activeNotebookId) {
-      fetchNotebook(activeNotebookId)
+    if (activeNotebookSlug) {
+      fetchNotebook(activeNotebookSlug)
     } else {
       setActiveNotebook(null)
     }
-  }, [activeNotebookId, fetchNotebook])
+  }, [activeNotebookSlug, fetchNotebook])
 
   const refreshNotebook = useCallback(async () => {
-    if (activeNotebookId) {
-      await fetchNotebook(activeNotebookId)
+    if (activeNotebookSlug) {
+      await fetchNotebook(activeNotebookSlug)
     }
-  }, [activeNotebookId, fetchNotebook])
+  }, [activeNotebookSlug, fetchNotebook])
 
   return (
     <NotebookContext.Provider value={{ activeNotebook, isLoading, refreshNotebook }}>
@@ -104,5 +103,15 @@ export const getSourceIcon = (type: Source["sourceType"], className?: string) =>
     default:
       return <BookOpen className={`${baseClass} text-zinc-500`} />
   }
+}
+
+export function slugify(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
 }
 

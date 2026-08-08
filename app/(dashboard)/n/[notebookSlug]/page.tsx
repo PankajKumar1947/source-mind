@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, redirect } from "next/navigation"
-import { useNotebook } from "@/context/notebook-context"
+import { useNotebook, slugify } from "@/context/notebook-context"
 
 export default function NotebookPage() {
   const { activeNotebook } = useNotebook();
@@ -10,10 +10,11 @@ export default function NotebookPage() {
     notFound()
   }
 
+  const slug = slugify(activeNotebook.title);
   const hasChat = activeNotebook.chats && activeNotebook.chats.length > 0;
   if (hasChat) {
-    redirect(`/notebook/${activeNotebook.notebookId}/chat`);
+    redirect(`/n/${slug}/chat`);
   } else {
-    redirect(`/notebook/${activeNotebook.notebookId}/sources`);
+    redirect(`/n/${slug}/sources`);
   }
 }

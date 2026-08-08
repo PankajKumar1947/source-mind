@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { DeleteDialog } from "@/components/shared/delete-dialog"
-import { CreateNotebook } from "@/app/(dashboard)/notebook/_components/create-notebook"
+import { CreateNotebook } from "@/app/(dashboard)/n/_components/create-notebook"
 import {
   MoreHorizontal,
   Eye,
@@ -34,8 +34,8 @@ import {
   Video
 } from "lucide-react"
 import { deleteNotebook } from "@/actions/notebook.action"
-import { getSourceIcon } from "@/context/notebook-context"
-import { getNotebookById } from "@/services/notebook.service"
+import { getSourceIcon, slugify } from "@/context/notebook-context"
+import { getNotebookBySlug } from "@/services/notebook.service"
 import { useRouter, useParams, usePathname } from "next/navigation"
 import { toast } from "sonner"
 
@@ -61,7 +61,7 @@ export function NavMain({
   const router = useRouter()
   const params = useParams()
   const pathname = usePathname()
-  const activeNotebookId = params.notebookId as string
+  const activeNotebookSlug = params.notebookSlug as string
   const [isPending, startTransition] = useTransition()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -73,20 +73,20 @@ export function NavMain({
   const [activeNotebook, setActiveNotebook] = useState<{ title: string; sources: Source[] } | null>(null)
 
   useEffect(() => {
-    if (!activeNotebookId) {
+    if (!activeNotebookSlug) {
       setActiveNotebook(null)
       return
     }
 
     const fetchSources = async () => {
-      const data = await getNotebookById(activeNotebookId)
+      const data = await getNotebookBySlug(activeNotebookSlug)
       if (data) {
         setActiveNotebook(data)
       }
     }
 
     fetchSources()
-  }, [activeNotebookId, pathname])
+  }, [activeNotebookSlug, pathname])
 
   const handleConfirmDelete = async () => {
     if (!notebookToDelete) return
@@ -104,19 +104,19 @@ export function NavMain({
     })
   }
 
-  const handleView = (notebookId: string) => {
-    router.push(`/notebook/${notebookId}`)
+  const handleView = (title: string) => {
+    router.push(`/n/${slugify(title)}`)
   }
 
 
 
   // Render Notebook Details Sidebar if in a notebook
-  if (activeNotebookId) {
+  if (activeNotebookSlug) {
     const navItems = [
-      { name: "Chat", icon: MessageSquare, path: `/notebook/${activeNotebookId}/chat` },
-      { name: "Sources", icon: FileText, path: `/notebook/${activeNotebookId}/sources` },
-      { name: "Learn", icon: GraduationCap, path: `/notebook/${activeNotebookId}/learn` },
-      { name: "Settings", icon: Settings, path: `/notebook/${activeNotebookId}/settings` },
+      { name: "Chat", icon: MessageSquare, path: `/n/${activeNotebookSlug}/chat` },
+      { name: "Sources", icon: FileText, path: `/n/${activeNotebookSlug}/sources` },
+      { name: "Learn", icon: GraduationCap, path: `/n/${activeNotebookSlug}/learn` },
+      { name: "Settings", icon: Settings, path: `/n/${activeNotebookSlug}/settings` },
     ]
 
     return (
@@ -190,12 +190,12 @@ export function NavMain({
       </SidebarGroupAction>
       <SidebarMenu>
         {notebooks.map((notebook) => {
-          const isActive = notebook.notebookId === activeNotebookId
+          const isActive = slugify(notebook.title) === activeNotebookSlug
           return (
             <SidebarMenuItem key={notebook.notebookId}>
               <SidebarMenuButton
                 isActive={isActive}
-                onClick={() => handleView(notebook.notebookId)}
+                onClick={() => handleView(notebook.title)}
               >
                 <BookOpen className="size-4 shrink-0" />
                 <span>{notebook.title}</span>
@@ -210,7 +210,7 @@ export function NavMain({
                   }
                 />
                 <DropdownMenuContent side="right" align="start" className="w-40 rounded-lg">
-                  <DropdownMenuItem onClick={() => handleView(notebook.notebookId)}>
+                  <DropdownMenuItem onClick={() => handleView(notebook.title)}>
                     <Eye className="mr-2 size-4 text-muted-foreground" />
                     <span>View</span>
                   </DropdownMenuItem>
