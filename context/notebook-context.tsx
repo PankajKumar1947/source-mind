@@ -91,17 +91,18 @@ export function useNotebook() {
 
 export const getSourceIcon = (type: Source["sourceType"], className?: string) => {
   const baseClass = className || "size-4"
+  const themeClass = `${baseClass} text-primary`
   switch (type) {
     case "PDF":
-      return <FileText className={`${baseClass} text-red-500`} />
+      return <FileText className={themeClass} />
     case "TEXT":
-      return <FileUp className={`${baseClass} text-blue-500`} />
+      return <FileUp className={themeClass} />
     case "WEB_LINK":
-      return <Globe className={`${baseClass} text-emerald-500`} />
+      return <Globe className={themeClass} />
     case "YT_VIDEO":
-      return <Video className={`${baseClass} text-purple-500`} />
+      return <Video className={themeClass} />
     default:
-      return <BookOpen className={`${baseClass} text-zinc-500`} />
+      return <BookOpen className={themeClass} />
   }
 }
 

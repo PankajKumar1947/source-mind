@@ -52,22 +52,81 @@ export function NotebookSources() {
     }
   }
 
+  const handleTypeClick = (type: string) => {
+    if (type === "PDF" || type === "TEXT") {
+      setIsUploadOpen(true);
+    } else {
+      toast.info(`${type} Under implementation`);
+    }
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col gap-6">
+      {/* Add Source Card Grid */}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold text-foreground">Add Source</h2>
+        <div className="border border-border rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3 bg-card/30">
+          <div className="grid grid-cols-2 gap-3 md:col-span-2">
+            {/* PDF Card */}
+            <button
+              onClick={() => handleTypeClick("PDF")}
+              className="flex flex-col items-center justify-center gap-2 h-28 border border-border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group"
+            >
+              <FileText className="size-6 text-primary group-hover:scale-105 transition-transform" />
+              <span className="text-sm font-medium text-foreground">PDF</span>
+            </button>
+
+            {/* YT Link Card */}
+            <button
+              onClick={() => handleTypeClick("YT Link")}
+              className="flex flex-col items-center justify-center gap-2 h-28 border border-border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group"
+            >
+              <Video className="size-6 text-primary group-hover:scale-105 transition-transform" />
+              <span className="text-sm font-medium text-foreground">YT Link</span>
+            </button>
+
+            {/* Text Card */}
+            <button
+              onClick={() => handleTypeClick("TEXT")}
+              className="flex flex-col items-center justify-center gap-2 h-28 border border-border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group"
+            >
+              <FileUp className="size-6 text-primary group-hover:scale-105 transition-transform" />
+              <span className="text-sm font-medium text-foreground">Text</span>
+            </button>
+
+            {/* VTT Card */}
+            <button
+              onClick={() => handleTypeClick("VTT")}
+              className="flex flex-col items-center justify-center gap-2 h-28 border border-border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group"
+            >
+              <BookOpen className="size-6 text-primary group-hover:scale-105 transition-transform" />
+              <span className="text-sm font-medium text-foreground">VTT</span>
+            </button>
+          </div>
+
+          {/* Web Link Card (spans 2 rows on desktop) */}
+          <button
+            onClick={() => handleTypeClick("Web Link")}
+            className="flex flex-col items-center justify-center gap-2 md:h-full h-28 border border-border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group md:row-span-2"
+          >
+            <Globe className="size-6 text-primary group-hover:scale-105 transition-transform" />
+            <span className="text-sm font-medium text-foreground">Web Link</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Sources List Card */}
       <Card className="shadow-xs border border-border">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="pb-2">
           <div className="flex flex-col gap-1">
             <CardTitle className="text-xl flex items-center gap-2">
               <FileText className="size-5 text-primary" />
               Sources
             </CardTitle>
             <CardDescription>
-              Upload documents, links, or media files to train your notebook?.
+              Upload documents, links, or media files to train your notebook.
             </CardDescription>
           </div>
-          <Button size="sm" onClick={() => setIsUploadOpen(true)}>
-            Add Source
-          </Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pt-4">
           {notebook?.sources.length === 0 ? (
@@ -103,7 +162,7 @@ export function NotebookSources() {
 
       <BaseDialog
         title="Add Source"
-        description="Select a PDF or text file to upload to your notebook?."
+        description="Select a PDF or text file to upload to your notebook."
         open={isUploadOpen}
         setOpen={setIsUploadOpen}
         size="md"

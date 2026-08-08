@@ -5,8 +5,10 @@ export default async function NotebookLayout({
 }: { children: React.ReactNode }) {
 
   return (
-    <NotebookProvider>
-      {children}
-    </NotebookProvider>
+    <div className="p-8">
+      <NotebookProvider>
+        {children}
+      </NotebookProvider>
+    </div>
   )
 }
