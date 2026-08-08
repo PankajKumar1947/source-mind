@@ -1,0 +1,119 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
+import { BaseDialog } from "@/components/shared/base-dialog"
+import { FileUploader } from "@/components/shared/file-uploader"
+import { addSource } from "@/actions/source.action"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { UploadResponse } from "@imagekit/next"
+import { useNotebook, getSourceIcon } from "@/context/notebook-context"
+
+export function NotebookSources() {
+  const router = useRouter()
+  const { activeNotebook: notebook, refreshNotebook } = useNotebook();
+  const [isUploadOpen, setIsUploadOpen] = useState(false)
+
+  const handleUploadSuccess = async (res: UploadResponse) => {
+    if (!notebook) return;
+
+    let sourceType: "PDF" | "TEXT" = "PDF";
+    if (res.name?.toLowerCase().endsWith(".txt")) {
+      sourceType = "TEXT";
+    }
+
+    if (!res.filePath) {
+      toast.error("Upload succeeded, but file path is missing");
+      return;
+    }
+
+    try {
+      const result = await addSource({
+        notebookId: notebook?.notebookId,
+        title: res.name || "Untitled Source",
+        sourceType,
+        storageKey: res.filePath,
+      });
+
+      if (result.success) {
+        toast.success("Source added to notebook");
+        setIsUploadOpen(false);
+        router.refresh();
+        refreshNotebook();
+      } else {
+        toast.error(result.message || "Failed to add source");
+      }
+    } catch (err: unknown) {
+      console.error("DB Save Error:", err);
+      toast.error("Failed to add source to database");
+    }
+  }
+
+  return (
+    <div className="w-full">
+      <Card className="shadow-xs border border-border">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="flex flex-col gap-1">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <FileText className="size-5 text-primary" />
+              Sources
+            </CardTitle>
+            <CardDescription>
+              Upload documents, links, or media files to train your notebook?.
+            </CardDescription>
+          </div>
+          <Button size="sm" onClick={() => setIsUploadOpen(true)}>
+            Add Source
+          </Button>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 pt-4">
+          {notebook?.sources.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed rounded-lg border-muted-foreground/30">
+              <FileUp className="size-10 text-muted-foreground mb-3 stroke-[1.5]" />
+              <p className="text-sm font-medium text-foreground">No sources added yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Add PDF files, web links, or text to start analyzing.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border rounded-md border border-border bg-card">
+              {notebook?.sources.map((source) => (
+                <div key={source.sourceId} className="flex items-center justify-between p-3.5 text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {getSourceIcon(source.sourceType)}
+                    <span className="font-medium truncate text-foreground">
+                      {source.title || "Untitled Source"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {source.sourceType}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full border border-current text-muted-foreground">
+                      {source.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <BaseDialog
+        title="Add Source"
+        description="Select a PDF or text file to upload to your notebook?."
+        open={isUploadOpen}
+        setOpen={setIsUploadOpen}
+        size="md"
+      >
+        <FileUploader
+          folder={`/source-mind/${notebook?.userId}/${notebook?.title.replace(/[^a-zA-Z0-9-_]/g, "-")}`}
+          onUploadSuccess={handleUploadSuccess}
+          accept="application/pdf,text/plain"
+        />
+      </BaseDialog>
+    </div>
+  )
+}

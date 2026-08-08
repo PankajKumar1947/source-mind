@@ -1,23 +1,19 @@
-import { notFound } from "next/navigation"
-import { getNotebookById } from "@/services/notebook.service"
-import { NotebookDetail } from "../_components/notebook-detail"
+"use client";
 
-interface PageProps {
-  params: Promise<{
-    notebookId: string
-  }>
-}
+import { notFound, redirect } from "next/navigation"
+import { useNotebook } from "@/context/notebook-context"
 
-export default async function NotebookPage({ params }: PageProps) {
-  const { notebookId } = await params;
+export default function NotebookPage() {
+  const { activeNotebook } = useNotebook();
 
-  const currentNotebook = await getNotebookById(notebookId)
-
-  if (!currentNotebook) {
+  if (!activeNotebook) {
     notFound()
   }
 
-  return (
-    <NotebookDetail notebook={currentNotebook} />
-  )
+  const hasChat = activeNotebook.chats && activeNotebook.chats.length > 0;
+  if (hasChat) {
+    redirect(`/notebook/${activeNotebook.notebookId}/chat`);
+  } else {
+    redirect(`/notebook/${activeNotebook.notebookId}/sources`);
+  }
 }

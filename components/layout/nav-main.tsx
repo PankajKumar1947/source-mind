@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +18,25 @@ import {
 } from "@/components/ui/sidebar"
 import { DeleteDialog } from "@/components/shared/delete-dialog"
 import { CreateNotebook } from "@/app/(dashboard)/notebook/_components/create-notebook"
-import { MoreHorizontal, Eye, Trash2, BookOpen, Plus } from "lucide-react"
+import {
+  MoreHorizontal,
+  Eye,
+  Trash2,
+  BookOpen,
+  Plus,
+  MessageSquare,
+  FileText,
+  GraduationCap,
+  Settings,
+  ArrowLeft,
+  FileUp,
+  Globe,
+  Video
+} from "lucide-react"
 import { deleteNotebook } from "@/actions/notebook.action"
-import { useRouter, useParams } from "next/navigation"
+import { getSourceIcon } from "@/context/notebook-context"
+import { getNotebookById } from "@/services/notebook.service"
+import { useRouter, useParams, usePathname } from "next/navigation"
 import { toast } from "sonner"
 
 interface Notebook {
@@ -30,6 +46,13 @@ interface Notebook {
   userId: string
 }
 
+interface Source {
+  sourceId: string
+  title: string | null
+  sourceType: "PDF" | "TEXT" | "WEB_LINK" | "YT_VIDEO" | "VTT"
+  status: string
+}
+
 export function NavMain({
   notebooks = [],
 }: {
@@ -37,6 +60,7 @@ export function NavMain({
 }) {
   const router = useRouter()
   const params = useParams()
+  const pathname = usePathname()
   const activeNotebookId = params.notebookId as string
   const [isPending, startTransition] = useTransition()
   const [isOpen, setIsOpen] = useState(false)
@@ -44,6 +68,25 @@ export function NavMain({
   // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [notebookToDelete, setNotebookToDelete] = useState<{ id: string; title: string } | null>(null)
+
+  // Active notebook details (for sources section)
+  const [activeNotebook, setActiveNotebook] = useState<{ title: string; sources: Source[] } | null>(null)
+
+  useEffect(() => {
+    if (!activeNotebookId) {
+      setActiveNotebook(null)
+      return
+    }
+
+    const fetchSources = async () => {
+      const data = await getNotebookById(activeNotebookId)
+      if (data) {
+        setActiveNotebook(data)
+      }
+    }
+
+    fetchSources()
+  }, [activeNotebookId, pathname])
 
   const handleConfirmDelete = async () => {
     if (!notebookToDelete) return
@@ -65,6 +108,76 @@ export function NavMain({
     router.push(`/notebook/${notebookId}`)
   }
 
+
+
+  // Render Notebook Details Sidebar if in a notebook
+  if (activeNotebookId) {
+    const navItems = [
+      { name: "Chat", icon: MessageSquare, path: `/notebook/${activeNotebookId}/chat` },
+      { name: "Sources", icon: FileText, path: `/notebook/${activeNotebookId}/sources` },
+      { name: "Learn", icon: GraduationCap, path: `/notebook/${activeNotebookId}/learn` },
+      { name: "Settings", icon: Settings, path: `/notebook/${activeNotebookId}/settings` },
+    ]
+
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Back Button */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => router.push("/")} className="text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="size-4 shrink-0" />
+                <span>Back to Notebooks</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Notebook Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-3">Notebook Menu</SidebarGroupLabel>
+          <SidebarMenu>
+            {navItems.map((item) => {
+              const isActive = pathname === item.path
+              return (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    onClick={() => router.push(item.path)}
+                  >
+                    <item.icon className="size-4 shrink-0" />
+                    <span>{item.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Sources List */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-3">Sources</SidebarGroupLabel>
+          <SidebarMenu>
+            {activeNotebook?.sources.map((source) => (
+              <SidebarMenuItem key={source.sourceId}>
+                <SidebarMenuButton className="cursor-default select-none pointer-events-none">
+                  {getSourceIcon(source.sourceType, "size-4 shrink-0")}
+                  <span className="truncate">{source.title || "Untitled Source"}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+            {activeNotebook && activeNotebook.sources.length === 0 && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                No sources added.
+              </div>
+            )}
+          </SidebarMenu>
+        </SidebarGroup>
+      </div>
+    )
+  }
+
+  // Render Default Sidebar
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Notebooks</SidebarGroupLabel>
@@ -139,3 +252,4 @@ export function NavMain({
     </SidebarGroup>
   )
 }
+
