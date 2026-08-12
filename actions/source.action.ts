@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { AddSourceInput, addSourceInputSchema } from "@/validations/source.validation";
 import { SourceStatus } from "@/prisma/generated/prisma";
+import { addSourceJob } from "@/services/queue.service";
 
 export const addSource = actionHandler(
   async (source: AddSourceInput) => {
@@ -21,7 +22,7 @@ export const addSource = actionHandler(
     })
     if (!noteBookExists) throw new ActionError("Notebook not found");
 
-    await prisma.source.create({
+    const res = await prisma.source.create({
       data: {
         notebookId: source.notebookId,
         title: source.title,
@@ -31,6 +32,9 @@ export const addSource = actionHandler(
         embeddingModel: "text-embedding-3-small",
       }
     });
+
+    // add in the queue
+    await addSourceJob(res.sourceId);
 
     return {
       success: true,
