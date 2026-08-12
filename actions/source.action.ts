@@ -6,8 +6,8 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { AddSourceInput, addSourceInputSchema } from "@/validations/source.validation";
 import { SourceStatus } from "@/prisma/generated/prisma";
-import { addSourceJob } from "@/services/queue.service";
 import { envConfig } from "@/config/env";
+import { enqueueSourceJob } from "@/lib/queue";
 
 export const addSource = actionHandler(
   async (source: AddSourceInput) => {
@@ -37,7 +37,7 @@ export const addSource = actionHandler(
     });
 
     // add in the queue
-    await addSourceJob(res.sourceId);
+    await enqueueSourceJob({ sourceId: res.sourceId });
 
     return {
       success: true,

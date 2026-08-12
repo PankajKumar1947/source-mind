@@ -22,3 +22,6 @@ export const envConfig = envSchema.parse({
   QDRANT_PORT: process.env.QDRANT_PORT,
   MISTRAL_EMBEDDING_MODEL: process.env.MISTRAL_EMBEDDING_MODEL,
 });
+
+export const INDEXING_QUEUE = "INDEXING_Q";
+export const QUERY_QUEUE = "QUERY_Q";

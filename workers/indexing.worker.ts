@@ -1,13 +1,14 @@
-import { SOURCE_QUEUE_NAME, SourceJobData } from "@/services/queue.service";
+import "dotenv/config";
 import prisma from "@/lib/prisma";
 import { Worker } from "bullmq";
-import { connection } from "@/config/queue";
+import { connection, SourceJobData } from "@/lib/queue";
 import { SourceStatus } from "@/prisma/generated/prisma";
 import loadPdfPages from "@/lib/pdf-parser";
 import { addDocuments } from "@/lib/qdrant";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { INDEXING_QUEUE } from "@/config/env";
 
-const sourceWorker = new Worker<SourceJobData>(SOURCE_QUEUE_NAME, async (job) => {
+const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, async (job) => {
   console.log("Job received", job.name, job.data);
 
   // 1. Fetch the source details from the database
@@ -48,7 +49,7 @@ const sourceWorker = new Worker<SourceJobData>(SOURCE_QUEUE_NAME, async (job) =>
   connection
 });
 
-sourceWorker.on("active", async (job) => {
+indexingSourceWorker.on("active", async (job) => {
   console.log(`Job ${job.id} [${job.name}] is now active.`);
   try {
     await prisma.source.update({
@@ -64,7 +65,7 @@ sourceWorker.on("active", async (job) => {
   }
 });
 
-sourceWorker.on("completed", async (job) => {
+indexingSourceWorker.on("completed", async (job) => {
   console.log(`Job ${job.id} [${job.name}] has completed.`);
   try {
     await prisma.source.update({
@@ -80,7 +81,7 @@ sourceWorker.on("completed", async (job) => {
   }
 });
 
-sourceWorker.on("failed", async (job, error) => {
+indexingSourceWorker.on("failed", async (job, error) => {
   console.error(`Job ${job?.id} has failed:`, error);
   if (!job) return;
   try {
@@ -100,7 +101,7 @@ sourceWorker.on("failed", async (job, error) => {
 // Graceful shutdown to close worker connections when server process stops
 const gracefulShutdown = async (signal: string) => {
   console.log(`Received ${signal}. Shutting down worker gracefully...`);
-  await sourceWorker.close();
+  await indexingSourceWorker.close();
   process.exit(0);
 };
 
