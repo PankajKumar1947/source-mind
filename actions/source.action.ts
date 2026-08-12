@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { AddSourceInput, addSourceInputSchema } from "@/validations/source.validation";
 import { SourceStatus } from "@/prisma/generated/prisma";
 import { addSourceJob } from "@/services/queue.service";
+import { envConfig } from "@/config/env";
 
 export const addSource = actionHandler(
   async (source: AddSourceInput) => {
@@ -22,14 +23,16 @@ export const addSource = actionHandler(
     })
     if (!noteBookExists) throw new ActionError("Notebook not found");
 
+    const url = `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}`;
     const res = await prisma.source.create({
       data: {
         notebookId: source.notebookId,
         title: source.title,
         sourceType: source.sourceType,
         storageKey: source.storageKey,
+        url: url,
         status: SourceStatus.PENDING,
-        embeddingModel: "text-embedding-3-small",
+        embeddingModel: envConfig.MISTRAL_EMBEDDING_MODEL,
       }
     });
 
