@@ -12,6 +12,13 @@ export type SourceJobData = {
   sourceId: string;
 };
 
+export type QueryJobData = {
+  chatId: string;
+  content: string;
+  notebookId: string;
+  assistantMessageId: string;
+};
+
 export const indexingQueue = new Queue<SourceJobData>(INDEXING_QUEUE, { connection });
 export const queryQueue = new Queue(QUERY_QUEUE, { connection });
 
@@ -27,3 +34,12 @@ export async function enqueueSourceJob(payload: SourceJobData) {
     }
   )
 }
+
+export async function enqueueQueryJob(payload: QueryJobData) {
+  return await queryQueue.add("query-user", payload, {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 2000 },
+    removeOnComplete: 100,
+    removeOnFail: 500,
+  })
+} 

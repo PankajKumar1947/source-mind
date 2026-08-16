@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useParams } from "next/navigation"
 import { Plus, Send, Loader2, MessageSquare, AlertCircle } from "lucide-react"
 import { useNotebook } from "@/context/notebook-context"
 import { getChatsByNotebookId, getChatById } from "@/services/chat.service"
@@ -32,7 +31,7 @@ export default function ChatPage() {
   const [chats, setChats] = React.useState<any[]>([])
   const [selectedChatId, setSelectedChatId] = React.useState<string | "new">("new")
   const [activeChat, setActiveChat] = React.useState<ChatDetails | null>(null)
-  
+
   const [input, setInput] = React.useState("")
   const [isLoadingChats, setIsLoadingChats] = React.useState(false)
   const [isLoadingMessages, setIsLoadingMessages] = React.useState(false)
@@ -92,6 +91,33 @@ export default function ChatPage() {
     loadChatDetails()
   }, [selectedChatId])
 
+  // Poll for message updates if there is a message currently in PROCESSING status
+  React.useEffect(() => {
+    if (selectedChatId === "new" || !activeChat) return;
+
+    const hasProcessing = activeChat.messages.some((msg) => msg.status === "PROCESSING");
+    if (!hasProcessing) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const data = await getChatById(selectedChatId);
+        if (data) {
+          const sortedMessages = [...(data.messages || [])].sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          setActiveChat({
+            ...data,
+            messages: sortedMessages as Message[],
+          });
+        }
+      } catch (error) {
+        console.error("Error polling chat:", error);
+      }
+    }, 1500);
+
+    return () => clearInterval(intervalId);
+  }, [selectedChatId, activeChat?.messages.map(m => m.status).join(",")]);
+
   // Scroll to bottom of message list
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -120,9 +146,9 @@ export default function ChatPage() {
       setActiveChat((prev) =>
         prev
           ? {
-              ...prev,
-              messages: [...prev.messages, tempUserMessage],
-            }
+            ...prev,
+            messages: [...prev.messages, tempUserMessage],
+          }
           : null
       )
     } else {
@@ -249,26 +275,34 @@ export default function ChatPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {activeChat.messages.map((message) => (
-                <div
-                  key={message.messageId}
-                  className={cn(
-                    "flex w-full",
-                    message.role === "USER" ? "justify-end" : "justify-start"
-                  )}
-                >
-                  <Bubble
-                    variant={message.role === "USER" ? "default" : "muted"}
-                    align={message.role === "USER" ? "end" : "start"}
+              {activeChat.messages
+                .filter((message) => !(message.status === "PROCESSING" && !message.content))
+                .map((message) => (
+                  <div
+                    key={message.messageId}
+                    className={cn(
+                      "flex w-full",
+                      message.role === "USER" ? "justify-end" : "justify-start"
+                    )}
                   >
-                    <BubbleContent className="whitespace-pre-wrap">
-                      {message.content}
-                    </BubbleContent>
-                  </Bubble>
-                </div>
-              ))}
-              
-              {isSending && (
+                    <Bubble
+                      variant={message.role === "USER" ? "default" : "muted"}
+                      align={message.role === "USER" ? "end" : "start"}
+                    >
+                      <BubbleContent className="whitespace-pre-wrap">
+                        {message.content}
+                        {message.status === "PROCESSING" && (
+                          <span className="block mt-2 text-[10px] text-muted-foreground/60 italic flex items-center gap-1.5 border-t border-border/30 pt-1.5">
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                            Draft preview... Synthesizing final response...
+                          </span>
+                        )}
+                      </BubbleContent>
+                    </Bubble>
+                  </div>
+                ))}
+
+              {(isSending || activeChat.messages.some((msg) => msg.status === "PROCESSING" && !msg.content)) && (
                 <div className="flex w-full justify-start">
                   <Bubble variant="muted" align="start">
                     <BubbleContent className="flex items-center gap-2">

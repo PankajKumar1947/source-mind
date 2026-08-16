@@ -8,7 +8,7 @@ import { addDocuments } from "@/lib/qdrant";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { INDEXING_QUEUE } from "@/config/env";
 
-const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, async (job) => {
+export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, async (job) => {
   console.log("Job received", job.name, job.data);
 
   // 1. Fetch the source details from the database
@@ -97,13 +97,3 @@ indexingSourceWorker.on("failed", async (job, error) => {
     console.error(`Failed to update status to FAILED for job ${job.id}:`, err);
   }
 });
-
-// Graceful shutdown to close worker connections when server process stops
-const gracefulShutdown = async (signal: string) => {
-  console.log(`Received ${signal}. Shutting down worker gracefully...`);
-  await indexingSourceWorker.close();
-  process.exit(0);
-};
-
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
