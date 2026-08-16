@@ -1,3 +1,5 @@
+"use server";
+
 import { envConfig } from "@/config/env";
 import { actionHandler } from "@/lib/action-handler";
 import { ActionError } from "@/lib/errors";
@@ -45,6 +47,11 @@ export const createMessage = actionHandler(
       hydeDocuments(content)
     ]);
 
+    console.log("stepBack", stepBack);
+    console.log("rewritten", rewritten);
+    console.log("subqueries", subqueries);
+    console.log("hyde", hyde);
+
     const retrieves = await similaritySearch(stepBack + "\n" + rewritten + "\n" + subqueries.join(", "), envConfig.MISTRAL_EMBEDDING_MODEL)
 
     const chatResponse = await mistral.chat.complete({
@@ -80,6 +87,7 @@ export const createMessage = actionHandler(
     return {
       success: true,
       message: aiMessage || "AI failed to generate response",
+      chatId: newChatId,
     }
   },
   createMessageSchema

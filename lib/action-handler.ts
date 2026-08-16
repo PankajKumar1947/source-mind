@@ -4,6 +4,7 @@ export type ActionState = {
   success: boolean;
   message: string;
   errors?: Record<string, string[]>;
+  [key: string]: any;
 };
 
 export function actionHandler<T>(
