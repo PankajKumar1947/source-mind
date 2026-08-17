@@ -25,18 +25,19 @@ export const addSource = actionHandler(
 
     let url = "";
     if (source.sourceType === SourceType.WEB_LINK) {
-      url = source.url || ""
-    } else {
+      url = source.url || "";
+    } else if (source.sourceType === SourceType.PDF) {
       url = `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}`;
-    };
+    }
 
     const res = await prisma.source.create({
       data: {
         notebookId: source.notebookId,
         title: source.title,
         sourceType: source.sourceType,
-        storageKey: source.storageKey,
-        url: url,
+        storageKey: source.storageKey || null,
+        url: url || null,
+        content: source.content || null,
         status: SourceStatus.PENDING,
         embeddingModel: envConfig.MISTRAL_EMBEDDING_MODEL,
       }

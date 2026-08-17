@@ -10,7 +10,7 @@ import { FileUploader } from "@/components/shared/file-uploader"
 import { addSource } from "@/lib/actions/source.action"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { UploadResponse } from "@imagekit/next"
+import { upload, UploadResponse } from "@imagekit/next"
 import { useNotebook, getSourceIcon } from "@/components/providers/notebook-provider"
 
 export function NotebookSources() {
@@ -21,6 +21,10 @@ export function NotebookSources() {
   const [webLinkUrl, setWebLinkUrl] = useState("")
   const [webLinkTitle, setWebLinkTitle] = useState("")
   const [isSubmittingLink, setIsSubmittingLink] = useState(false)
+  const [isTextOpen, setIsTextOpen] = useState(false)
+  const [textTitle, setTextTitle] = useState("")
+  const [textContent, setTextContent] = useState("")
+  const [isSubmittingText, setIsSubmittingText] = useState(false)
 
   const handleUploadSuccess = async (res: UploadResponse) => {
     if (!notebook) return;
@@ -98,9 +102,42 @@ export function NotebookSources() {
     }
   };
 
+  const handleTextSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notebook || !textContent.trim() || !textTitle.trim()) return;
+
+    setIsSubmittingText(true);
+    try {
+      const result = await addSource({
+        notebookId: notebook.notebookId,
+        title: textTitle.trim(),
+        sourceType: "TEXT",
+        content: textContent.trim(),
+      });
+
+      if (result.success) {
+        toast.success("Text added to notebook");
+        setIsTextOpen(false);
+        setTextTitle("");
+        setTextContent("");
+        router.refresh();
+        refreshNotebook();
+      } else {
+        toast.error(result.message || "Failed to add text source");
+      }
+    } catch (err: unknown) {
+      console.error("Text Add Error:", err);
+      toast.error("Failed to add text. Please try again.");
+    } finally {
+      setIsSubmittingText(false);
+    }
+  };
+
   const handleTypeClick = (type: string) => {
-    if (type === "PDF" || type === "TEXT") {
+    if (type === "PDF") {
       setIsUploadOpen(true);
+    } else if (type === "TEXT") {
+      setIsTextOpen(true);
     } else if (type === "Web Link") {
       setIsWebLinkOpen(true);
     } else {
@@ -270,6 +307,60 @@ export function NotebookSources() {
             </Button>
             <Button type="submit" disabled={isSubmittingLink}>
               {isSubmittingLink ? "Adding..." : "Add Link"}
+            </Button>
+          </div>
+        </form>
+      </BaseDialog>
+
+      <BaseDialog
+        title="Add Custom Text"
+        description="Write or paste custom text to add to your notebook."
+        open={isTextOpen}
+        setOpen={setIsTextOpen}
+        size="md"
+      >
+        <form onSubmit={handleTextSubmit} className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="text-title" className="text-sm font-medium text-foreground">
+              Title
+            </label>
+            <Input
+              id="text-title"
+              type="text"
+              placeholder="My Custom Text Note"
+              value={textTitle}
+              onChange={(e) => setTextTitle(e.target.value)}
+              required
+              disabled={isSubmittingText}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="text-content" className="text-sm font-medium text-foreground">
+              Content
+            </label>
+            <textarea
+              id="text-content"
+              placeholder="Write or paste your custom text notes here..."
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              className="flex min-h-[160px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              required
+              disabled={isSubmittingText}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsTextOpen(false)}
+              disabled={isSubmittingText}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingText}>
+              {isSubmittingText ? "Adding..." : "Add Text"}
             </Button>
           </div>
         </form>

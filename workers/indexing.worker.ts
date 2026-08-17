@@ -18,13 +18,16 @@ export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, as
     where: { sourceId: job.data.sourceId },
   });
 
-  if (!source || !source.storageKey) {
-    throw new Error(`Source not found or missing storage key for ID: ${job.data.sourceId}`);
+  if (!source) {
+    throw new Error(`Source not found for ID: ${job.data.sourceId}`);
   }
 
   let docs: Document[] = [];
   if (source.sourceType === SourceType.WEB_LINK) {
-    const scrapedData = await scrapWebLink(source.url || '', "markdown");
+    if (!source.url) {
+      throw new Error(`URL is missing for web link source ID: ${job.data.sourceId}`);
+    }
+    const scrapedData = await scrapWebLink(source.url, "markdown");
     const content = scrapedData.markdown || JSON.stringify(scrapedData);
     docs = [
       new Document({
@@ -35,9 +38,26 @@ export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, as
         },
       }),
     ];
+  } else if (source.sourceType === SourceType.TEXT) {
+    if (!source.content) {
+      throw new Error(`Content is missing for text source ID: ${job.data.sourceId}`);
+    }
+    const textContent = source.content;
+    docs = [
+      new Document({
+        pageContent: textContent,
+        metadata: {
+          source: source.url || "direct-input",
+          title: source.title || "Custom Text",
+        },
+      }),
+    ];
   } else {
     // 2. Parse the PDF document
-    docs = await loadPdfPages(source.url || '');
+    if (!source.storageKey) {
+      throw new Error(`Storage key is missing for PDF source ID: ${job.data.sourceId}`);
+    }
+    docs = await loadPdfPages(source.storageKey);
   }
 
   // Enrich document metadata with database identifiers

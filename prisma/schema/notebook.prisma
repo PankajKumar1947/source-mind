@@ -24,6 +24,7 @@ model Source {
   notebook       Notebook     @relation(fields: [notebookId], references: [notebookId])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  content        String?
   chunks         Chunk[]
 
   @@index([notebookId])
