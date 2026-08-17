@@ -4,7 +4,6 @@ import * as React from "react"
 import { Plus, Send, Loader2, MessageSquare, AlertCircle } from "lucide-react"
 import { useNotebook } from "@/context/notebook-context"
 import { getChatsByNotebookId, getChatById } from "@/services/chat.service"
-import { createMessage } from "@/actions/message.action"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +26,7 @@ interface ChatDetails {
 }
 
 export default function ChatPage() {
-  const { activeNotebook, isLoading: notebookLoading, refreshNotebook } = useNotebook()
+  const { activeNotebook, isLoading: notebookLoading } = useNotebook()
   const [chats, setChats] = React.useState<any[]>([])
   const [selectedChatId, setSelectedChatId] = React.useState<string | "new">("new")
   const [activeChat, setActiveChat] = React.useState<ChatDetails | null>(null)
@@ -67,7 +66,11 @@ export default function ChatPage() {
     }
 
     const loadChatDetails = async () => {
-      setIsLoadingMessages(true)
+      // Avoid flashing the spinner if we already have this chat's messages in state (e.g. just finished streaming)
+      const isAlreadyLoaded = activeChat && activeChat.chatId === selectedChatId;
+      if (!isAlreadyLoaded) {
+        setIsLoadingMessages(true);
+      }
       try {
         const data = await getChatById(selectedChatId)
         if (data) {
@@ -160,30 +163,86 @@ export default function ChatPage() {
     }
 
     try {
-      const response = await createMessage({
-        chatId: selectedChatId,
-        content: messageContent,
-        notebookId: activeNotebook.notebookId,
-      })
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatId: selectedChatId,
+          content: messageContent,
+          notebookId: activeNotebook.notebookId,
+        }),
+      });
 
-      if (response && response.success) {
-        // Refresh notebook to update sidebar / general chat list state
-        await refreshNotebook()
-        await fetchChats(activeNotebook.notebookId)
+      if (!response.ok) {
+        throw new Error("Failed to send message and start stream");
+      }
 
-        if (response.chatId) {
-          setSelectedChatId(response.chatId)
+      const headerChatId = response.headers.get("x-chat-id");
+      const currentChatId = headerChatId || selectedChatId;
+
+      // Add placeholder assistant message to render incoming hyde stream
+      const tempAssistantMessageId = "temp-assistant-" + Date.now();
+      const tempAssistantMessage: Message = {
+        messageId: tempAssistantMessageId,
+        chatId: currentChatId,
+        role: "ASSISTANT",
+        status: "PROCESSING",
+        content: "",
+        createdAt: new Date(),
+      };
+
+      setActiveChat((prev) => {
+        if (!prev) return null;
+        const updatedMessages = prev.messages.map((m) =>
+          m.messageId === "temp-user" ? { ...m, chatId: currentChatId } : m
+        );
+        return {
+          ...prev,
+          chatId: currentChatId,
+          messages: [...updatedMessages, tempAssistantMessage],
+        };
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedHyde = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedHyde += chunk;
+
+          // Update state chunk-by-chunk for live streaming preview
+          setActiveChat((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              messages: prev.messages.map((msg) =>
+                msg.messageId === tempAssistantMessageId
+                  ? { ...msg, content: accumulatedHyde }
+                  : msg
+              ),
+            };
+          });
         }
-      } else {
-        toast.error(response?.message || "Failed to get response")
-        setIsSending(false)
+      }
+
+      await fetchChats(activeNotebook.notebookId);
+
+      if (headerChatId) {
+        setSelectedChatId(headerChatId);
       }
     } catch (error) {
-      console.error("Error sending message:", error)
-      toast.error("An error occurred while sending the message")
-      setIsSending(false)
+      console.error("Error sending message:", error);
+      toast.error("An error occurred while sending the message");
+      setIsSending(false);
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
   }
 

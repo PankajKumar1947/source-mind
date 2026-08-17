@@ -2,7 +2,6 @@ import { Worker } from "bullmq";
 import { connection, QueryJobData } from "@/lib/queue";
 import { envConfig, QUERY_QUEUE } from "@/config/env";
 import { queryRewriting } from "@/lib/query/query-rewriting";
-import { hydeDocuments } from "@/lib/query/hyde";
 import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/mistral";
 import { similaritySearch } from "@/lib/qdrant";
 import prisma from "@/lib/prisma";
@@ -40,11 +39,8 @@ export const queryWorker = new Worker<QueryJobData>(QUERY_QUEUE, async (job) => 
     });
     const embeddingModel = source?.embeddingModel || envConfig.MISTRAL_EMBEDDING_MODEL;
 
-    // Run rewriting and hyde document generation in parallel
-    const [{ stepBack, rewritten, subqueries }, hyde] = await Promise.all([
-      queryRewriting(content),
-      hydeDocuments(content)
-    ]);
+    // Run rewriting steps in the worker
+    const { stepBack, rewritten, subqueries } = await queryRewriting(content);
 
     const filter = {
       must: [
@@ -60,14 +56,12 @@ export const queryWorker = new Worker<QueryJobData>(QUERY_QUEUE, async (job) => 
     const stepBackResult = await similaritySearch(stepBack, embeddingModel, 4, filter);
     const rewrittenResult = await similaritySearch(rewritten, embeddingModel, 4, filter);
     const subqueriesResult = await similaritySearch(subqueries.join(", "), embeddingModel, 4, filter);
-    const hydeResult = await similaritySearch(hyde, embeddingModel, 4, filter);
 
     // Merge results using Reciprocal Rank Fusion (RRF)
     const mergedResults = reciprocalRankFusion([
       stepBackResult,
       rewrittenResult,
-      subqueriesResult,
-      hydeResult
+      subqueriesResult
     ]);
 
     // Take top 5 consolidated context snippets

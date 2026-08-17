@@ -1,11 +1,15 @@
 import { mistral, MISTRAL_CHAT_MODEL } from "../mistral";
 
-const HYDE_SYSTEM_PROMPT = `
-  You are an expert in generating hypothetical answers or documents.
-  Generate a comprehensive, well-structured hypothetical answer based on the following query. 
-  The answer should be detailed, factual in tone (even if the topic is speculative), and cover the key aspects implied by the query.
-  Do not reference that this is a hypothetical answer and also don't tell You are Unsure in the response.  
-`
+export const HYDE_SYSTEM_PROMPT = `
+  You are an expert in generating hypothetical documents for vector search retrieval (RAG).
+  Given a user query, generate a hypothetical passage or document chunk that would contain the answer.
+  
+  CRITICAL RULES:
+  1. Do not invent specific facts, list items, or national structures (like US government departments) out of thin air if the query asks for information from "given documents" or "provided context". 
+  2. Instead, generate a template passage describing how the document structures the answer (e.g., "The document details various government job exams, positions, vacancies, and pay scales, listing roles like...").
+  3. Keep the content abstract but matching the search intent.
+  4. Do not mention that this is a hypothetical answer or that you are unsure.
+`;
 
 export async function hydeDocuments(query: string): Promise<string> {
   try {
