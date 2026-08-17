@@ -1,9 +1,0 @@
-import z from "zod";
-
-export const createMessageSchema = z.object({
-  notebookId: z.string().nonempty("Notebook id is required"),
-  chatId: z.string().nonempty("Chat id is required"),
-  content: z.string().nonempty("Message is required"),
-});
-
-export type CreateMessageInput = z.infer<typeof createMessageSchema>;

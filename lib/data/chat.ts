@@ -30,7 +30,11 @@ export async function getChatById(chatId: string) {
       chatId: chatId,
     },
     include: {
-      messages: true,
+      messages: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
       notebook: true,
     },
   });

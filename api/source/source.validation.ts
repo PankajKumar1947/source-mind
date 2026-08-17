@@ -6,6 +6,6 @@ export const addSourceInputSchema = z.object({
   title: z.string().nonempty("Title is required"),
   sourceType: z.enum(SourceType),
   storageKey: z.string().nonempty("Storage key is required"),
-})
+});
 
 export type AddSourceInput = z.infer<typeof addSourceInputSchema>;

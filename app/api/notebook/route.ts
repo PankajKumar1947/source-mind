@@ -1,7 +1,7 @@
 import { apiHandler } from "@/lib/helpers/api-handler";
 import { ApiError } from "@/lib/helpers/errors";
 import prisma from "@/lib/clients/prisma";
-import { createNotebookSchema } from "@/validations/notebook.validation";
+import { createNotebookSchema } from "@/api/notebook/notebook.validation";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 

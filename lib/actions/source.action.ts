@@ -4,7 +4,7 @@ import { actionHandler } from "@/lib/helpers/action-handler";
 import { ActionError } from "@/lib/helpers/errors";
 import prisma from "@/lib/clients/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { AddSourceInput, addSourceInputSchema } from "@/validations/source.validation";
+import { AddSourceInput, addSourceInputSchema } from "@/api/source/source.validation";
 import { SourceStatus } from "@/prisma/generated/prisma";
 import { envConfig } from "@/config/env";
 import { enqueueSourceJob } from "@/lib/clients/queue";

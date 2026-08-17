@@ -3,7 +3,7 @@
 import { actionHandler } from "@/lib/helpers/action-handler";
 import { ActionError } from "@/lib/helpers/errors";
 import prisma from "@/lib/clients/prisma";
-import { CreateNotebookInput, createNotebookSchema, DeleteNotebookInput, deleteNotebookSchema, UpdateNotebookInput, updateNotebookSchema } from "@/validations/notebook.validation";
+import { CreateNotebookInput, createNotebookSchema, DeleteNotebookInput, deleteNotebookSchema, UpdateNotebookInput, updateNotebookSchema } from "@/api/notebook/notebook.validation";
 import { auth } from '@clerk/nextjs/server'
 
 export const createNotebook = actionHandler(

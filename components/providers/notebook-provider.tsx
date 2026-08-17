@@ -4,32 +4,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useParams } from "next/navigation"
 import { getNotebookBySlug } from "@/lib/data/notebook"
 import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
-
-export interface Source {
-  sourceId: string
-  title: string | null
-  sourceType: "PDF" | "TEXT" | "WEB_LINK" | "YT_VIDEO" | "VTT"
-  status: "PENDING" | "SUCCESS" | "FAILED" | "PROCESSING"
-  createdAt: Date
-}
-
-export interface Chat {
-  chatId: string
-  title: string
-  createdAt: Date
-}
-
-export interface Notebook {
-  notebookId: string
-  title: string
-  sources: Source[]
-  chats: Chat[]
-  userId: string
-  createdAt: Date
-}
+import { ISource } from "@/api/source/source.type"
+import { INotebook } from "@/api/notebook/notebook.type"
 
 interface NotebookContextType {
-  activeNotebook: Notebook | null
+  activeNotebook: INotebook | null
   isLoading: boolean
   refreshNotebook: () => Promise<void>
 }
@@ -40,7 +19,7 @@ export function NotebookProvider({ children }: { children: React.ReactNode }) {
   const params = useParams()
   const activeNotebookSlug = params.notebookSlug as string
 
-  const [activeNotebook, setActiveNotebook] = useState<Notebook | null>(null)
+  const [activeNotebook, setActiveNotebook] = useState<INotebook | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const fetchNotebook = useCallback(async (slug: string) => {
@@ -89,7 +68,7 @@ export function useNotebook() {
   return context
 }
 
-export const getSourceIcon = (type: Source["sourceType"], className?: string) => {
+export const getSourceIcon = (type: ISource["sourceType"], className?: string) => {
   const baseClass = className || "size-4"
   const themeClass = `${baseClass} text-primary`
   switch (type) {
