@@ -9,6 +9,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { INDEXING_QUEUE } from "@/config/env";
 import { scrapWebLink } from "@/lib/clients/firecrawl";
 import { Document } from "@langchain/core/documents";
+import { getYoutubeTranscript, extractYoutubeVideoId } from "@/lib/helpers/youtube-transcript";
 
 export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, async (job) => {
   console.log("Job received", job.name, job.data);
@@ -49,6 +50,28 @@ export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, as
         metadata: {
           source: source.url || "direct-input",
           title: source.title || "Custom Text",
+        },
+      }),
+    ];
+  } else if (source.sourceType === SourceType.YT_VIDEO) {
+    if (!source.url) {
+      throw new Error(`URL is missing for YouTube video source ID: ${job.data.sourceId}`);
+    }
+    const videoId = extractYoutubeVideoId(source.url);
+    if (!videoId) {
+      throw new Error(`Invalid YouTube URL for source ID: ${job.data.sourceId}`);
+    }
+    const transcriptParts = await getYoutubeTranscript(videoId);
+    if (!transcriptParts || transcriptParts.length === 0) {
+      throw new Error(`Failed to fetch transcript or transcript is empty for Video ID: ${videoId}`);
+    }
+    const fullTranscript = transcriptParts.map((t) => t.text).join(" ");
+    docs = [
+      new Document({
+        pageContent: fullTranscript,
+        metadata: {
+          source: source.url,
+          title: source.title || "YouTube Video",
         },
       }),
     ];

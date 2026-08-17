@@ -24,7 +24,7 @@ export const addSource = actionHandler(
     if (!noteBookExists) throw new ActionError("Notebook not found");
 
     let url = "";
-    if (source.sourceType === SourceType.WEB_LINK) {
+    if (source.sourceType === SourceType.WEB_LINK || source.sourceType === SourceType.YT_VIDEO) {
       url = source.url || "";
     } else if (source.sourceType === SourceType.PDF) {
       url = `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}`;

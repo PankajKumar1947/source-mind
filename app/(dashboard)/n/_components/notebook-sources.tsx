@@ -25,6 +25,10 @@ export function NotebookSources() {
   const [textTitle, setTextTitle] = useState("")
   const [textContent, setTextContent] = useState("")
   const [isSubmittingText, setIsSubmittingText] = useState(false)
+  const [isYtOpen, setIsYtOpen] = useState(false)
+  const [ytUrl, setYtUrl] = useState("")
+  const [ytTitle, setYtTitle] = useState("")
+  const [isSubmittingYt, setIsSubmittingYt] = useState(false)
 
   const handleUploadSuccess = async (res: UploadResponse) => {
     if (!notebook) return;
@@ -92,7 +96,8 @@ export function NotebookSources() {
         router.refresh();
         refreshNotebook();
       } else {
-        toast.error(result.message || "Failed to add web link");
+        const errorMessage = result.errors?.url?.[0] || result.message || "Failed to add web link";
+        toast.error(errorMessage);
       }
     } catch (err: unknown) {
       console.error("Web Link Add Error:", err);
@@ -123,13 +128,51 @@ export function NotebookSources() {
         router.refresh();
         refreshNotebook();
       } else {
-        toast.error(result.message || "Failed to add text source");
+        const errorMessage = result.errors?.content?.[0] || result.errors?.title?.[0] || result.message || "Failed to add text source";
+        toast.error(errorMessage);
       }
     } catch (err: unknown) {
       console.error("Text Add Error:", err);
       toast.error("Failed to add text. Please try again.");
     } finally {
       setIsSubmittingText(false);
+    }
+  };
+
+  const handleYtSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notebook || !ytUrl.trim()) return;
+
+    setIsSubmittingYt(true);
+    try {
+      let finalTitle = ytTitle.trim();
+      if (!finalTitle) {
+        finalTitle = "YouTube Video";
+      }
+
+      const result = await addSource({
+        notebookId: notebook.notebookId,
+        title: finalTitle,
+        sourceType: "YT_VIDEO",
+        url: ytUrl.trim(),
+      });
+
+      if (result.success) {
+        toast.success("YouTube source added to notebook");
+        setIsYtOpen(false);
+        setYtUrl("");
+        setYtTitle("");
+        router.refresh();
+        refreshNotebook();
+      } else {
+        const errorMessage = result.errors?.url?.[0] || result.message || "Failed to add YouTube source";
+        toast.error(errorMessage);
+      }
+    } catch (err: unknown) {
+      console.error("YouTube Add Error:", err);
+      toast.error("Failed to add YouTube video. Please ensure the URL is valid.");
+    } finally {
+      setIsSubmittingYt(false);
     }
   };
 
@@ -140,6 +183,8 @@ export function NotebookSources() {
       setIsTextOpen(true);
     } else if (type === "Web Link") {
       setIsWebLinkOpen(true);
+    } else if (type === "YT Link") {
+      setIsYtOpen(true);
     } else {
       toast.info(`${type} Under implementation`);
     }
@@ -361,6 +406,59 @@ export function NotebookSources() {
             </Button>
             <Button type="submit" disabled={isSubmittingText}>
               {isSubmittingText ? "Adding..." : "Add Text"}
+            </Button>
+          </div>
+        </form>
+      </BaseDialog>
+
+      <BaseDialog
+        title="Add YouTube Video"
+        description="Provide a YouTube URL to fetch its transcript and add to your notebook."
+        open={isYtOpen}
+        setOpen={setIsYtOpen}
+        size="md"
+      >
+        <form onSubmit={handleYtSubmit} className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="yt-url" className="text-sm font-medium text-foreground">
+              YouTube Video URL
+            </label>
+            <Input
+              id="yt-url"
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={ytUrl}
+              onChange={(e) => setYtUrl(e.target.value)}
+              required
+              disabled={isSubmittingYt}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="yt-title" className="text-sm font-medium text-foreground">
+              Title (Optional)
+            </label>
+            <Input
+              id="yt-title"
+              type="text"
+              placeholder="My Video Source"
+              value={ytTitle}
+              onChange={(e) => setYtTitle(e.target.value)}
+              disabled={isSubmittingYt}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsYtOpen(false)}
+              disabled={isSubmittingYt}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingYt}>
+              {isSubmittingYt ? "Adding..." : "Add Video"}
             </Button>
           </div>
         </form>

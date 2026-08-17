@@ -1,5 +1,6 @@
 import { SourceType } from "@/prisma/generated/prisma";
 import z from "zod";
+import { extractYoutubeVideoId } from "@/lib/helpers/youtube-transcript";
 
 export const addSourceInputSchema = z.object({
   notebookId: z.string().nonempty("Notebook ID is required"),
@@ -35,6 +36,23 @@ export const addSourceInputSchema = z.object({
         message: "Either storage key or text content is required for text sources",
         path: ["content"],
       });
+    }
+  } else if (data.sourceType === "YT_VIDEO") {
+    if (!data.url || data.url.trim() === "") {
+      ctx.addIssue({
+        code: "custom",
+        message: "URL is required for YouTube video sources",
+        path: ["url"],
+      });
+    } else {
+      const videoId = extractYoutubeVideoId(data.url);
+      if (!videoId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Invalid YouTube URL format",
+          path: ["url"],
+        });
+      }
     }
   }
 });
