@@ -5,7 +5,7 @@ import { ActionError } from "@/lib/helpers/errors";
 import prisma from "@/lib/clients/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { AddSourceInput, addSourceInputSchema } from "@/api/source/source.validation";
-import { SourceStatus } from "@/prisma/generated/prisma";
+import { SourceStatus, SourceType } from "@/prisma/generated/prisma";
 import { envConfig } from "@/config/env";
 import { enqueueSourceJob } from "@/lib/clients/queue";
 
@@ -23,7 +23,13 @@ export const addSource = actionHandler(
     })
     if (!noteBookExists) throw new ActionError("Notebook not found");
 
-    const url = `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}`;
+    let url = "";
+    if (source.sourceType === SourceType.WEB_LINK) {
+      url = source.url || ""
+    } else {
+      url = `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}`;
+    };
+
     const res = await prisma.source.create({
       data: {
         notebookId: source.notebookId,

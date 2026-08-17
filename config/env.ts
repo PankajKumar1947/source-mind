@@ -10,6 +10,7 @@ const envSchema = z.object({
   MISTRAL_EMBEDDING_MODEL: z.string().min(1, { message: "MISTRAL_EMBEDDING_MODEL is required" }),
   QDRANT_HOST: z.string().min(1, { message: "QDRANT_HOST is required" }),
   QDRANT_PORT: z.coerce.number().min(1, { message: "QDRANT_PORT is required" }),
+  FIRECRAWL_API_KEY: z.string().min(1, { message: "FIRECRAWL_API_KEY is required" }),
 });
 
 export const envConfig = envSchema.parse({
@@ -21,6 +22,7 @@ export const envConfig = envSchema.parse({
   QDRANT_HOST: process.env.QDRANT_HOST,
   QDRANT_PORT: process.env.QDRANT_PORT,
   MISTRAL_EMBEDDING_MODEL: process.env.MISTRAL_EMBEDDING_MODEL,
+  FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
 });
 
 export const INDEXING_QUEUE = "INDEXING_Q";

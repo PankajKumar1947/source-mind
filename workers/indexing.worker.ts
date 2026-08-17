@@ -2,11 +2,13 @@ import "dotenv/config";
 import prisma from "@/lib/clients/prisma";
 import { Worker } from "bullmq";
 import { connection, SourceJobData } from "@/lib/clients/queue";
-import { SourceStatus } from "@/prisma/generated/prisma";
+import { SourceStatus, SourceType } from "@/prisma/generated/prisma";
 import loadPdfPages from "@/lib/helpers/pdf-parser";
 import { addDocuments } from "@/lib/rag/qdrant";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { INDEXING_QUEUE } from "@/config/env";
+import { scrapWebLink } from "@/lib/clients/firecrawl";
+import { Document } from "@langchain/core/documents";
 
 export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, async (job) => {
   console.log("Job received", job.name, job.data);
@@ -20,8 +22,23 @@ export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, as
     throw new Error(`Source not found or missing storage key for ID: ${job.data.sourceId}`);
   }
 
-  // 2. Parse the PDF document
-  const docs = await loadPdfPages(source.url || '');
+  let docs: Document[] = [];
+  if (source.sourceType === SourceType.WEB_LINK) {
+    const scrapedData = await scrapWebLink(source.url || '', "markdown");
+    const content = scrapedData.markdown || JSON.stringify(scrapedData);
+    docs = [
+      new Document({
+        pageContent: content,
+        metadata: {
+          source: source.url,
+          title: source.title,
+        },
+      }),
+    ];
+  } else {
+    // 2. Parse the PDF document
+    docs = await loadPdfPages(source.url || '');
+  }
 
   // Enrich document metadata with database identifiers
   const enrichedDocs = docs.map((doc) => {

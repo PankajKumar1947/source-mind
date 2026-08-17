@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
 import { BaseDialog } from "@/components/shared/base-dialog"
 import { FileUploader } from "@/components/shared/file-uploader"
@@ -16,6 +17,10 @@ export function NotebookSources() {
   const router = useRouter()
   const { activeNotebook: notebook, refreshNotebook } = useNotebook();
   const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const [isWebLinkOpen, setIsWebLinkOpen] = useState(false)
+  const [webLinkUrl, setWebLinkUrl] = useState("")
+  const [webLinkTitle, setWebLinkTitle] = useState("")
+  const [isSubmittingLink, setIsSubmittingLink] = useState(false)
 
   const handleUploadSuccess = async (res: UploadResponse) => {
     if (!notebook) return;
@@ -52,9 +57,52 @@ export function NotebookSources() {
     }
   }
 
+  const handleWebLinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notebook || !webLinkUrl.trim()) return;
+
+    setIsSubmittingLink(true);
+    try {
+      let finalTitle = webLinkTitle.trim();
+      if (!finalTitle) {
+        try {
+          finalTitle = new URL(webLinkUrl).hostname || "Web Link";
+        } catch {
+          finalTitle = "Web Link";
+        }
+      }
+
+      const result = await addSource({
+        notebookId: notebook.notebookId,
+        title: finalTitle,
+        sourceType: "WEB_LINK",
+        storageKey: webLinkUrl.trim(),
+        url: webLinkUrl.trim(),
+      });
+
+      if (result.success) {
+        toast.success("Web link added to notebook");
+        setIsWebLinkOpen(false);
+        setWebLinkUrl("");
+        setWebLinkTitle("");
+        router.refresh();
+        refreshNotebook();
+      } else {
+        toast.error(result.message || "Failed to add web link");
+      }
+    } catch (err: unknown) {
+      console.error("Web Link Add Error:", err);
+      toast.error("Failed to add web link. Please ensure the URL is valid.");
+    } finally {
+      setIsSubmittingLink(false);
+    }
+  };
+
   const handleTypeClick = (type: string) => {
     if (type === "PDF" || type === "TEXT") {
       setIsUploadOpen(true);
+    } else if (type === "Web Link") {
+      setIsWebLinkOpen(true);
     } else {
       toast.info(`${type} Under implementation`);
     }
@@ -172,6 +220,59 @@ export function NotebookSources() {
           onUploadSuccess={handleUploadSuccess}
           accept="application/pdf,text/plain"
         />
+      </BaseDialog>
+
+      <BaseDialog
+        title="Add Web Link"
+        description="Provide a URL to crawl and add to your notebook."
+        open={isWebLinkOpen}
+        setOpen={setIsWebLinkOpen}
+        size="md"
+      >
+        <form onSubmit={handleWebLinkSubmit} className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="web-link-url" className="text-sm font-medium text-foreground">
+              URL
+            </label>
+            <Input
+              id="web-link-url"
+              type="url"
+              placeholder="https://example.com"
+              value={webLinkUrl}
+              onChange={(e) => setWebLinkUrl(e.target.value)}
+              required
+              disabled={isSubmittingLink}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="web-link-title" className="text-sm font-medium text-foreground">
+              Title (Optional)
+            </label>
+            <Input
+              id="web-link-title"
+              type="text"
+              placeholder="Example Website"
+              value={webLinkTitle}
+              onChange={(e) => setWebLinkTitle(e.target.value)}
+              disabled={isSubmittingLink}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsWebLinkOpen(false)}
+              disabled={isSubmittingLink}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingLink}>
+              {isSubmittingLink ? "Adding..." : "Add Link"}
+            </Button>
+          </div>
+        </form>
       </BaseDialog>
     </div>
   )
