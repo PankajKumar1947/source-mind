@@ -1,4 +1,4 @@
-import { embeddings } from "@/config/embedding";
+import { embeddings } from "@/lib/clients/embeddings";
 import { envConfig } from "@/config/env";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { QdrantClient } from "@qdrant/js-client-rest";

@@ -1,11 +1,11 @@
 import { Worker } from "bullmq";
-import { connection, QueryJobData } from "@/lib/queue";
+import { connection, QueryJobData } from "@/lib/clients/queue";
 import { envConfig, QUERY_QUEUE } from "@/config/env";
-import { queryRewriting } from "@/lib/query/query-rewriting";
-import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/mistral";
-import { similaritySearch } from "@/lib/qdrant";
-import prisma from "@/lib/prisma";
-import { ActionError } from "@/lib/errors";
+import { queryRewriting } from "@/lib/rag/query-rewriting";
+import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/clients/mistral";
+import { similaritySearch } from "@/lib/rag/qdrant";
+import prisma from "@/lib/clients/prisma";
+import { ActionError } from "@/lib/helpers/errors";
 import { MessageStatus } from "@/prisma/generated/prisma";
 import { Document } from "@langchain/core/documents";
 

@@ -1,8 +1,8 @@
 "use server";
 
-import { actionHandler } from "@/lib/action-handler";
-import { ActionError } from "@/lib/errors";
-import prisma from "@/lib/prisma";
+import { actionHandler } from "@/lib/helpers/action-handler";
+import { ActionError } from "@/lib/helpers/errors";
+import prisma from "@/lib/clients/prisma";
 import { CreateNotebookInput, createNotebookSchema, DeleteNotebookInput, deleteNotebookSchema, UpdateNotebookInput, updateNotebookSchema } from "@/validations/notebook.validation";
 import { auth } from '@clerk/nextjs/server'
 

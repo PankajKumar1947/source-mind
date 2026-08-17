@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/clients/prisma";
 import { auth } from "@clerk/nextjs/server";
 
 export async function getUserNotebooks() {

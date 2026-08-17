@@ -1,10 +1,10 @@
 import "dotenv/config";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/clients/prisma";
 import { Worker } from "bullmq";
-import { connection, SourceJobData } from "@/lib/queue";
+import { connection, SourceJobData } from "@/lib/clients/queue";
 import { SourceStatus } from "@/prisma/generated/prisma";
-import loadPdfPages from "@/lib/pdf-parser";
-import { addDocuments } from "@/lib/qdrant";
+import loadPdfPages from "@/lib/helpers/pdf-parser";
+import { addDocuments } from "@/lib/rag/qdrant";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { INDEXING_QUEUE } from "@/config/env";
 

@@ -1,5 +1,5 @@
 import { MistralAIEmbeddings } from "@langchain/mistralai";
-import { envConfig } from "./env";
+import { envConfig } from "@/config/env";
 
 const apiKey = envConfig.MISTRAL_API_KEY;
 

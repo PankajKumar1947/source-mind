@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { Plus, Send, Loader2, MessageSquare, AlertCircle } from "lucide-react"
-import { useNotebook } from "@/context/notebook-context"
-import { getChatsByNotebookId, getChatById } from "@/services/chat.service"
+import { useNotebook } from "@/components/providers/notebook-provider"
+import { getChatsByNotebookId, getChatById } from "@/lib/data/chat"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

@@ -1,13 +1,13 @@
 "use server";
 
-import { actionHandler } from "@/lib/action-handler";
-import { ActionError } from "@/lib/errors";
-import prisma from "@/lib/prisma";
+import { actionHandler } from "@/lib/helpers/action-handler";
+import { ActionError } from "@/lib/helpers/errors";
+import prisma from "@/lib/clients/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { AddSourceInput, addSourceInputSchema } from "@/validations/source.validation";
 import { SourceStatus } from "@/prisma/generated/prisma";
 import { envConfig } from "@/config/env";
-import { enqueueSourceJob } from "@/lib/queue";
+import { enqueueSourceJob } from "@/lib/clients/queue";
 
 export const addSource = actionHandler(
   async (source: AddSourceInput) => {

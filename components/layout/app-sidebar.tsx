@@ -11,7 +11,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { GalleryVerticalEndIcon } from "lucide-react"
-import { getUserNotebooks } from "@/services/notebook.service"
+import { getUserNotebooks } from "@/lib/data/notebook"
 
 export async function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const notebooks = await getUserNotebooks()

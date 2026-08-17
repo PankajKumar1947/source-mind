@@ -33,9 +33,9 @@ import {
   Globe,
   Video
 } from "lucide-react"
-import { deleteNotebook } from "@/actions/notebook.action"
-import { getSourceIcon, slugify } from "@/context/notebook-context"
-import { getNotebookBySlug } from "@/services/notebook.service"
+import { deleteNotebook } from "@/lib/actions/notebook.action"
+import { getSourceIcon, slugify } from "@/components/providers/notebook-provider"
+import { getNotebookBySlug } from "@/lib/data/notebook"
 import { useRouter, useParams, usePathname } from "next/navigation"
 import { toast } from "sonner"
 

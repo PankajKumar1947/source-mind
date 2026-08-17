@@ -1,4 +1,4 @@
-import { mistral, MISTRAL_CHAT_MODEL } from "../mistral";
+import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/clients/mistral";
 
 export const HYDE_SYSTEM_PROMPT = `
   You are an expert in generating hypothetical documents for vector search retrieval (RAG).

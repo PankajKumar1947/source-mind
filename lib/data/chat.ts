@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/clients/prisma";
 
 export async function getChatsByNotebookId(notebookId: string) {
   const { userId } = await auth();

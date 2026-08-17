@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, redirect } from "next/navigation"
-import { useNotebook, slugify } from "@/context/notebook-context"
+import { useNotebook, slugify } from "@/components/providers/notebook-provider"
 
 export default function NotebookPage() {
   const { activeNotebook } = useNotebook();

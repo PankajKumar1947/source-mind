@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { BaseDialog } from "@/components/shared/base-dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { createNotebook } from "@/actions/notebook.action"
+import { createNotebook } from "@/lib/actions/notebook.action"
 import { useRouter } from "next/navigation"
 
 import { toast } from "sonner"

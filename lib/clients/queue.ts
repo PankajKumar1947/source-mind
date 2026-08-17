@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { envConfig, INDEXING_QUEUE, QUERY_QUEUE } from '../config/env';
+import { envConfig, INDEXING_QUEUE, QUERY_QUEUE } from '@/config/env';
 import IORedis from 'ioredis';
 
 export const connection = new IORedis({

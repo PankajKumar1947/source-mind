@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { mistral, MISTRAL_CHAT_MODEL } from '../mistral';
+import { mistral, MISTRAL_CHAT_MODEL } from '@/lib/clients/mistral';
 
 const QUERY_REWRITING_SYSTEM_PROMPT = `
   You are a query understanding assistant for a retrieval system.

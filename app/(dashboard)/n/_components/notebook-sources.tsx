@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
 import { BaseDialog } from "@/components/shared/base-dialog"
 import { FileUploader } from "@/components/shared/file-uploader"
-import { addSource } from "@/actions/source.action"
+import { addSource } from "@/lib/actions/source.action"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { UploadResponse } from "@imagekit/next"
-import { useNotebook, getSourceIcon } from "@/context/notebook-context"
+import { useNotebook, getSourceIcon } from "@/components/providers/notebook-provider"
 
 export function NotebookSources() {
   const router = useRouter()

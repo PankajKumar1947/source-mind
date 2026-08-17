@@ -1,4 +1,4 @@
-import { NotebookProvider } from "@/context/notebook-context"
+import { NotebookProvider } from "@/components/providers/notebook-provider"
 
 export default async function NotebookLayout({
   children

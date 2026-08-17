@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
-import { getNotebookBySlug } from "@/services/notebook.service"
+import { getNotebookBySlug } from "@/lib/data/notebook"
 import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
 
 export interface Source {

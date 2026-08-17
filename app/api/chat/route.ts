@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/prisma";
-import { enqueueQueryJob } from "@/lib/queue";
-import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/mistral";
-import { HYDE_SYSTEM_PROMPT } from "@/lib/query/hyde";
+import prisma from "@/lib/clients/prisma";
+import { enqueueQueryJob } from "@/lib/clients/queue";
+import { mistral, MISTRAL_CHAT_MODEL } from "@/lib/clients/mistral";
+import { HYDE_SYSTEM_PROMPT } from "@/lib/rag/hyde";
 import { MessageRole, MessageStatus } from "@/prisma/generated/prisma";
 
 export async function POST(req: NextRequest) {
