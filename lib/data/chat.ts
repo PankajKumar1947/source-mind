@@ -34,6 +34,13 @@ export async function getChatById(chatId: string) {
         orderBy: {
           createdAt: "asc",
         },
+        include: {
+          citations: {
+            include: {
+              source: true,
+            },
+          },
+        },
       },
       notebook: true,
     },

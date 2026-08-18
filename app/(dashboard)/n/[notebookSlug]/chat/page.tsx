@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Send, Loader2, MessageSquare } from "lucide-react"
+import { Plus, Send, Loader2, MessageSquare, BookOpen } from "lucide-react"
 import { useNotebook } from "@/components/providers/notebook-provider"
 import { useChat } from "@/hooks/use-chat"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
@@ -155,6 +155,40 @@ export default function ChatPage() {
                             <Loader2 className="h-3 w-3 animate-spin text-primary" />
                             Draft preview... Synthesizing final response...
                           </span>
+                        )}
+
+                        {message.citations && message.citations.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                              <BookOpen className="h-3 w-3" />
+                              Sources & References
+                            </div>
+                            <div className="flex flex-col gap-2 max-w-xl">
+                              {message.citations.map((citation, idx) => (
+                                <div
+                                  key={citation.citationId}
+                                  className="text-xs border border-border/30 rounded-lg p-2.5 bg-muted/40 hover:bg-muted/70 transition-colors text-foreground"
+                                >
+                                  <div className="flex items-center justify-between font-medium mb-1">
+                                    <span className="truncate flex items-center gap-1">
+                                      <span className="flex items-center justify-center h-4 w-4 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">
+                                        {idx + 1}
+                                      </span>
+                                      {citation.source.title || "Untitled Source"}
+                                    </span>
+                                    {citation.pageNumber && (
+                                      <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                        Page {citation.pageNumber}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-muted-foreground/90 italic leading-relaxed">
+                                    "{citation.content}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </BubbleContent>
                     </Bubble>

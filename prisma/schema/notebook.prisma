@@ -25,31 +25,10 @@ model Source {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   content        String?
-  chunks         Chunk[]
+  citations      Citation[]
 
   @@index([notebookId])
   @@map("source")
-}
-
-model Chunk {
-  chunkId String @id @default(uuid())
-
-  sourceId String
-  source   Source @relation(fields: [sourceId], references: [sourceId], onDelete: Cascade)
-
-  content String
-
-  chunkIndex Int
-  pageNumber Int?
-
-  citations Citation[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([sourceId])
-  @@index([sourceId, chunkIndex])
-  @@map("chunk")
 }
 
 enum SourceType {

@@ -8,6 +8,12 @@ import prisma from "@/lib/clients/prisma";
 import { ActionError } from "@/lib/helpers/errors";
 import { MessageStatus } from "@/prisma/generated/prisma";
 import { Document } from "@langchain/core/documents";
+import { z } from "zod";
+
+const queryResponseSchema = z.object({
+  answer: z.string(),
+  usedSourceIndexes: z.array(z.number()),
+});
 
 function reciprocalRankFusion(results: Document[][], k = 60): Document[] {
   const rrfScores: { [key: string]: { doc: Document; score: number } } = {};
@@ -67,27 +73,40 @@ export const queryWorker = new Worker<QueryJobData>(QUERY_QUEUE, async (job) => 
     // Take top 5 consolidated context snippets
     const finalContext = mergedResults.slice(0, 5);
 
-    const chatResponse = await mistral.chat.complete({
+    const chatResponse = await mistral.chat.parse({
       model: MISTRAL_CHAT_MODEL,
+      responseFormat: queryResponseSchema,
       messages: [{
         role: 'system',
         content: `You are an AI assistant.
           Use the following retrieved knowledge snippets to answer the user's query.
           If the retrieved information is not sufficient, reply "I don't have enough information to answer this question."
 
-          Retrieved Knowledge:
-          ${finalContext.map(r => r.pageContent).join("\n\n")}
+          CRITICAL RULES FOR "usedSourceIndexes":
+          - Be extremely strict. ONLY include a source index if you directly cited or extracted specific facts/text from it to construct your answer.
+          - If a source was irrelevant, not used, or did not contribute to the response, DO NOT include its index.
+          - List at most 4 source indexes. If more than 4 sources were useful, only list the top 4 most critical ones.
+          - If the retrieved knowledge is not sufficient to answer, reply "I don't have enough information to answer this question." and set "usedSourceIndexes" to an empty array [].
+
+          Retrieved Knowledge Snippets:
+          ${finalContext.map((r, idx) => `[Source ${idx + 1}]:\n${r.pageContent}`).join("\n\n")}
           `,
       },
       {
         role: 'user',
         content
       }]
-    })
+    });
 
-    const aiMessage = chatResponse.choices[0]?.message?.content as string;
-    if (!aiMessage) throw new ActionError("Failed to generate response");
-    console.log("aiMessage", aiMessage);
+    const result = chatResponse.choices?.[0]?.message?.parsed;
+    if (!result) {
+      throw new ActionError("Failed to parse response from Mistral");
+    }
+
+    const parsedResult = queryResponseSchema.parse(result);
+    const aiMessage = parsedResult.answer || "I don't have enough information to answer this question.";
+    
+    const usedSourceIndexes = (parsedResult.usedSourceIndexes || []).slice(0, 4);
 
     await prisma.message.update({
       where: { messageId: assistantMessageId },
@@ -96,6 +115,24 @@ export const queryWorker = new Worker<QueryJobData>(QUERY_QUEUE, async (job) => 
         status: MessageStatus.COMPLETED
       }
     });
+
+    const validCitations = finalContext
+      .filter((doc, idx) => !!doc.metadata.sourceId && usedSourceIndexes.includes(idx + 1))
+      .map((doc) => {
+        const page = doc.metadata.page;
+        return {
+          messageId: assistantMessageId,
+          sourceId: doc.metadata.sourceId as string,
+          pageNumber: page !== undefined && page !== null ? Number(page) + 1 : null,
+          content: doc.pageContent,
+        };
+      });
+
+    if (validCitations.length > 0) {
+      await prisma.citation.createMany({
+        data: validCitations,
+      });
+    }
   } catch (error) {
     console.error("Query worker execution failed", error);
     await prisma.message.update({

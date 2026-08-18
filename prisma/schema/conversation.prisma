@@ -30,14 +30,16 @@ model Citation {
   citationId String  @id @default(uuid())
   messageId  String
   message    Message @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
-  chunkId    String
-  chunk      Chunk   @relation(fields: [chunkId], references: [chunkId], onDelete: Cascade)
+  sourceId   String
+  source     Source  @relation(fields: [sourceId], references: [sourceId], onDelete: Cascade)
+  pageNumber Int?
+  content    String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([messageId])
-  @@index([chunkId])
+  @@index([sourceId])
   @@map("citation")
 }
 
