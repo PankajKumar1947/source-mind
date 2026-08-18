@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useParams } from "next/navigation"
+import Link from "next/link"
 
 export default function ChatPage() {
   const { activeNotebook, isLoading: notebookLoading } = useNotebook()
+  const { notebookSlug } = useParams()
   const [selectedChatId, setSelectedChatId] = React.useState<string | "new">("new")
   const [input, setInput] = React.useState("")
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -165,9 +168,10 @@ export default function ChatPage() {
                             </div>
                             <div className="flex flex-col gap-2 max-w-xl">
                               {message.citations.map((citation, idx) => (
-                                <div
+                                <Link
                                   key={citation.citationId}
-                                  className="text-xs border border-border/30 rounded-lg p-2.5 bg-muted/40 hover:bg-muted/70 transition-colors text-foreground"
+                                  href={`/n/${notebookSlug}/sources/${citation.sourceId}`}
+                                  className="block text-xs border border-border/30 rounded-lg p-2.5 bg-muted/40 hover:bg-muted/70 hover:border-primary/30 transition-all text-foreground cursor-pointer"
                                 >
                                   <div className="flex items-center justify-between font-medium mb-1">
                                     <span className="truncate flex items-center gap-1">
@@ -185,7 +189,7 @@ export default function ChatPage() {
                                   <p className="text-muted-foreground/90 italic leading-relaxed">
                                     "{citation.content}"
                                   </p>
-                                </div>
+                                </Link>
                               ))}
                             </div>
                           </div>

@@ -8,13 +8,15 @@ import { FileText, FileUp, Globe, Video, BookOpen } from "lucide-react"
 import { BaseDialog } from "@/components/shared/base-dialog"
 import { FileUploader } from "@/components/shared/file-uploader"
 import { addSource } from "@/lib/actions/source.action"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
+import Link from "next/link"
 import { toast } from "sonner"
 import { upload, UploadResponse } from "@imagekit/next"
 import { useNotebook, getSourceIcon } from "@/components/providers/notebook-provider"
 
 export function NotebookSources() {
   const router = useRouter()
+  const { notebookSlug } = useParams()
   const { activeNotebook: notebook, refreshNotebook } = useNotebook();
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [isWebLinkOpen, setIsWebLinkOpen] = useState(false)
@@ -271,9 +273,12 @@ export function NotebookSources() {
                 <div key={source.sourceId} className="flex items-center justify-between p-3.5 text-sm">
                   <div className="flex items-center gap-3 min-w-0">
                     {getSourceIcon(source.sourceType)}
-                    <span className="font-medium truncate text-foreground">
+                    <Link 
+                      href={`/n/${notebookSlug}/sources/${source.sourceId}`}
+                      className="font-medium truncate text-foreground hover:text-primary hover:underline transition-colors"
+                    >
                       {source.title || "Untitled Source"}
-                    </span>
+                    </Link>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-mono">
