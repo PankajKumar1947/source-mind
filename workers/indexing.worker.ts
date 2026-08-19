@@ -6,7 +6,7 @@ import { SourceStatus, SourceType } from "@/prisma/generated/prisma";
 import loadPdfPages from "@/lib/helpers/pdf-parser";
 import { addDocuments } from "@/lib/rag/qdrant";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { INDEXING_QUEUE } from "@/config/env";
+import { envConfig, INDEXING_QUEUE } from "@/config/env";
 import { scrapWebLink } from "@/lib/clients/firecrawl";
 import { Document } from "@langchain/core/documents";
 import { getYoutubeTranscript, extractYoutubeVideoId } from "@/lib/helpers/youtube-transcript";
@@ -77,10 +77,11 @@ export const indexingSourceWorker = new Worker<SourceJobData>(INDEXING_QUEUE, as
     ];
   } else {
     // 2. Parse the PDF document
-    if (!source.storageKey) {
-      throw new Error(`Storage key is missing for PDF source ID: ${job.data.sourceId}`);
+    const pdfUrl = source.url || (source.storageKey ? `${envConfig.IMAGEKIT_URL_ENDPOINT}/${source.storageKey}` : "");
+    if (!pdfUrl) {
+      throw new Error(`URL/Storage key is missing for PDF source ID: ${job.data.sourceId}`);
     }
-    docs = await loadPdfPages(source.storageKey);
+    docs = await loadPdfPages(pdfUrl);
   }
 
   // Enrich document metadata with database identifiers
