@@ -9,8 +9,9 @@ export interface IChat {
 export interface INotebook {
   notebookId: string;
   title: string;
-  sources: ISource[];
-  chats: IChat[];
+  sources?: ISource[];
+  chats?: IChat[];
   userId: string;
   createdAt: Date;
+  updatedAt: Date;
 }

@@ -261,7 +261,7 @@ export function NotebookSources() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pt-4">
-          {notebook?.sources.length === 0 ? (
+          {!notebook?.sources || notebook.sources.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed rounded-lg border-muted-foreground/30">
               <FileUp className="size-10 text-muted-foreground mb-3 stroke-[1.5]" />
               <p className="text-sm font-medium text-foreground">No sources added yet</p>
@@ -269,11 +269,11 @@ export function NotebookSources() {
             </div>
           ) : (
             <div className="divide-y divide-border rounded-md border border-border bg-card">
-              {notebook?.sources.map((source) => (
+              {notebook?.sources?.map((source) => (
                 <div key={source.sourceId} className="flex items-center justify-between p-3.5 text-sm">
                   <div className="flex items-center gap-3 min-w-0">
                     {getSourceIcon(source.sourceType)}
-                    <Link 
+                    <Link
                       href={`/n/${notebookSlug}/sources/${source.sourceId}`}
                       className="font-medium truncate text-foreground hover:text-primary hover:underline transition-colors"
                     >
@@ -394,7 +394,7 @@ export function NotebookSources() {
               placeholder="Write or paste your custom text notes here..."
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              className="flex min-h-[160px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-44 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
               disabled={isSubmittingText}
             />

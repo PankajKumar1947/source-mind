@@ -2,15 +2,34 @@
 
 import prisma from "@/lib/clients/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@/prisma/generated/prisma";
+import { SearchSortOptions } from "@/api/shared/common.type";
 
-export async function getUserNotebooks() {
+export async function getUserNotebooks(options?: SearchSortOptions) {
   const { userId } = await auth();
 
   if (!userId) return [];
 
+  const where: Prisma.NotebookWhereInput = { userId };
+  if (options?.query) {
+    where.title = {
+      contains: options.query,
+      mode: "insensitive",
+    };
+  }
+
+  let orderBy: Prisma.NotebookOrderByWithRelationInput = { createdAt: "desc" };
+  if (options?.sort === "oldest") {
+    orderBy = { createdAt: "asc" };
+  } else if (options?.sort === "az") {
+    orderBy = { title: "asc" };
+  } else if (options?.sort === "za") {
+    orderBy = { title: "desc" };
+  }
+
   return prisma.notebook.findMany({
-    where: { userId: userId },
-    orderBy: { createdAt: "desc" },
+    where,
+    orderBy,
   });
 }
 
