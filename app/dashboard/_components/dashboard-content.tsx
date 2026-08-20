@@ -9,7 +9,6 @@ import { NotebookItem } from "./notebook-item";
 import { SearchFilter } from "./search-filter";
 
 export function DashboardContent({ notebooks }: { notebooks: INotebook[] }) {
-  console.log(notebooks)
   const router = useRouter();
 
   return (
@@ -28,7 +27,7 @@ export function DashboardContent({ notebooks }: { notebooks: INotebook[] }) {
 
       {/* List of all notebooks */}
       <div className="flex flex-col gap-4">
-        
+
         {/* Server-side Search & Filter component */}
         <SearchFilter />
 
@@ -45,6 +44,7 @@ export function DashboardContent({ notebooks }: { notebooks: INotebook[] }) {
               return (
                 <NotebookItem
                   key={notebook.notebookId}
+                  notebookId={notebook.notebookId}
                   title={notebook.title}
                   createdAt={notebook.createdAt}
                   onClick={() => router.push(`/n/${slug}`)}
@@ -54,7 +54,6 @@ export function DashboardContent({ notebooks }: { notebooks: INotebook[] }) {
           </div>
         )}
       </div>
-
     </div>
   );
 }

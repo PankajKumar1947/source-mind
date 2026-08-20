@@ -1,7 +1,7 @@
 model Chat {
   chatId     String    @id @default(uuid())
   notebookId String
-  notebook   Notebook  @relation(fields: [notebookId], references: [notebookId])
+  notebook   Notebook  @relation(fields: [notebookId], references: [notebookId], onDelete: Cascade)
   title      String    @default("New Chat")
   messages   Message[]
   createdAt  DateTime  @default(now())
@@ -14,7 +14,7 @@ model Chat {
 model Message {
   messageId String        @id @default(uuid())
   chatId    String
-  chat      Chat          @relation(fields: [chatId], references: [chatId])
+  chat      Chat          @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
   role      MessageRole
   status    MessageStatus
   content   String?

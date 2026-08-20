@@ -21,7 +21,7 @@ model Source {
   embeddingModel String
   status         SourceStatus
   notebookId     String
-  notebook       Notebook     @relation(fields: [notebookId], references: [notebookId])
+  notebook       Notebook     @relation(fields: [notebookId], references: [notebookId], onDelete: Cascade)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   content        String?
